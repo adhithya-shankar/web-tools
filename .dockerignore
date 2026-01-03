@@ -1,0 +1,42 @@
+# Dependencies
+node_modules
+
+# Build outputs (will be rebuilt in container)
+dist
+dist-server
+
+# Development files
+.git
+.gitignore
+.vscode
+.idea
+*.md
+!README.md
+
+# Test files
+coverage
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+src/test
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (don't need to copy into image)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
