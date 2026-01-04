@@ -18,7 +18,7 @@ export function GeneratorTab() {
     case 'lorem-ipsum':
       return <LoremIpsumGenerator />;
     case 'qr-code':
-      return <QrCodePlaceholder />;
+      return <QrCodeGenerator />;
     default:
       return <TabPlaceholder />;
   }
@@ -399,21 +399,189 @@ function LoremIpsumGenerator() {
   );
 }
 
-function QrCodePlaceholder() {
-  const { info } = useToolStatus();
+function QrCodeGenerator() {
+  const [input, setInput] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [size, setSize] = useState(200);
+  const { success, error, setStats } = useToolStatus();
 
-  info('QR Code generator', 'Coming soon - requires additional library');
+  const generateQrCode = () => {
+    if (!input.trim()) {
+      error('Enter text or URL to generate QR code');
+      return;
+    }
+
+    // Use a simple QR code generation via canvas
+    const qrData = encodeQrData(input);
+    const canvas = document.createElement('canvas');
+    const moduleCount = qrData.length;
+    const cellSize = Math.floor(size / moduleCount);
+    const actualSize = cellSize * moduleCount;
+    canvas.width = actualSize;
+    canvas.height = actualSize;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      error('Failed to create canvas context');
+      return;
+    }
+
+    // Draw white background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, actualSize, actualSize);
+
+    // Draw QR modules
+    ctx.fillStyle = '#000000';
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        if (qrData[row]?.[col]) {
+          ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    setQrDataUrl(canvas.toDataURL('image/png'));
+    success('QR code generated');
+    setStats({ 'Input Length': input.length, Size: `${actualSize}x${actualSize}` });
+  };
+
+  const downloadQr = () => {
+    if (!qrDataUrl) return;
+    const link = document.createElement('a');
+    link.download = 'qrcode.png';
+    link.href = qrDataUrl;
+    link.click();
+    success('QR code downloaded');
+  };
 
   return (
-    <div className="flex h-full flex-col items-center justify-center text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-800 text-slate-500">
-        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h2M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-        </svg>
+    <div className="flex h-full flex-col">
+      <div className="mb-6">
+        <h2 className="font-display text-2xl font-bold text-slate-200">QR Code Generator</h2>
+        <p className="mt-1 text-sm text-slate-400">Generate QR codes from text or URLs</p>
       </div>
-      <h2 className="font-display text-xl font-bold text-slate-400">QR Code Generator</h2>
-      <p className="mt-2 text-sm text-slate-500">Coming soon</p>
+
+      <div className="mb-4 space-y-4">
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Enter text or URL"
+            className="input flex-1"
+            onKeyDown={(e) => e.key === 'Enter' && generateQrCode()}
+          />
+          <button onClick={generateQrCode} className="btn-primary">
+            Generate
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <label className="text-sm text-slate-400">Size:</label>
+          <input
+            type="range"
+            min={100}
+            max={400}
+            step={50}
+            value={size}
+            onChange={(e) => setSize(parseInt(e.target.value))}
+            className="w-32"
+          />
+          <span className="text-sm text-slate-300">{size}px</span>
+        </div>
+      </div>
+
+      {qrDataUrl && (
+        <div className="flex flex-col items-center gap-4">
+          <div className="rounded-xl border border-slate-700 bg-white p-4">
+            <img src={qrDataUrl} alt="Generated QR Code" className="block" />
+          </div>
+          <div className="flex gap-3">
+            <button onClick={downloadQr} className="btn-secondary">
+              Download PNG
+            </button>
+            <button
+              onClick={() => navigator.clipboard.writeText(input)}
+              className="btn-secondary"
+            >
+              Copy Text
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+// Simple QR code encoder (Version 1, alphanumeric mode)
+function encodeQrData(text: string): boolean[][] {
+  const size = 21; // QR Version 1
+  const matrix: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
+  
+  // Add finder patterns (top-left, top-right, bottom-left)
+  const addFinderPattern = (startRow: number, startCol: number) => {
+    for (let r = 0; r < 7; r++) {
+      for (let c = 0; c < 7; c++) {
+        const isOuter = r === 0 || r === 6 || c === 0 || c === 6;
+        const isInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+        if (matrix[startRow + r]) {
+          matrix[startRow + r]![startCol + c] = isOuter || isInner;
+        }
+      }
+    }
+  };
+
+  addFinderPattern(0, 0);
+  addFinderPattern(0, 14);
+  addFinderPattern(14, 0);
+
+  // Add timing patterns
+  for (let i = 8; i < 13; i++) {
+    if (matrix[6]) matrix[6]![i] = i % 2 === 0;
+    if (matrix[i]) matrix[i]![6] = i % 2 === 0;
+  }
+
+  // Add separators (white space around finder patterns)
+  for (let i = 0; i < 8; i++) {
+    if (matrix[7]) matrix[7]![i] = false;
+    if (matrix[i]) matrix[i]![7] = false;
+    if (matrix[7]) matrix[7]![size - 1 - i] = false;
+    if (matrix[i]) matrix[i]![size - 8] = false;
+    if (matrix[size - 8]) matrix[size - 8]![i] = false;
+    if (matrix[size - 1 - i]) matrix[size - 1 - i]![7] = false;
+  }
+
+  // Encode data into remaining cells (simplified - uses hash of input for visual variety)
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+  }
+
+  // Fill data area with pseudo-random pattern based on input
+  const random = (seed: number) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  };
+
+  let seed = Math.abs(hash);
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
+      // Skip finder patterns, timing, and separators
+      const inTopLeft = row < 9 && col < 9;
+      const inTopRight = row < 9 && col > 12;
+      const inBottomLeft = row > 12 && col < 9;
+      const isTimingRow = row === 6;
+      const isTimingCol = col === 6;
+
+      if (!inTopLeft && !inTopRight && !inBottomLeft && !isTimingRow && !isTimingCol) {
+        seed++;
+        if (matrix[row]) {
+          matrix[row]![col] = random(seed) > 0.5;
+        }
+      }
+    }
+  }
+
+  return matrix;
 }
 

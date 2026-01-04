@@ -1,5 +1,21 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react';
 import { TabId, Tool, StatusInfo, ToolState, TABS, TOOLS } from '../types/tools';
+
+interface MockEndpoint {
+  id: string;
+  method: string;
+  path: string;
+  response: string;
+  status: number;
+  delay: number;
+}
+
+interface MockServerState {
+  isRunning: boolean;
+  port: number;
+  startedAt: Date | null;
+  endpoints: MockEndpoint[];
+}
 
 interface ToolContextValue extends ToolState {
   setSelectedTab: (tabId: TabId) => void;
@@ -11,6 +27,10 @@ interface ToolContextValue extends ToolState {
   clearStatus: () => void;
   getTabInfo: () => (typeof TABS)[number];
   getToolsForCurrentTab: () => Tool[];
+  mockServer: MockServerState;
+  startMockServer: (port?: number, endpoints?: MockEndpoint[]) => Promise<boolean>;
+  stopMockServer: () => Promise<void>;
+  updateMockEndpoints: (endpoints: MockEndpoint[]) => void;
 }
 
 const defaultStatus: StatusInfo = {
@@ -27,6 +47,21 @@ export function ToolProvider({ children }: { children: ReactNode }) {
   const [isProcessing, setProcessing] = useState(false);
   const [lastAction, setLastAction] = useState<string>();
   const [stats, setStats] = useState<Record<string, string | number>>({});
+  const [mockServer, setMockServer] = useState<MockServerState>({
+    isRunning: false,
+    port: 3001,
+    startedAt: null,
+    endpoints: [
+      { id: '1', method: 'GET', path: '/api/users', response: '{"users": []}', status: 200, delay: 0 },
+      { id: '2', method: 'POST', path: '/api/users', response: '{"id": 1, "created": true}', status: 201, delay: 100 },
+    ],
+  });
+
+  // Use ref to always have access to the latest endpoints (avoids closure issues)
+  const endpointsRef = useRef(mockServer.endpoints);
+  useEffect(() => {
+    endpointsRef.current = mockServer.endpoints;
+  }, [mockServer.endpoints]);
 
   const handleSetSelectedTab = useCallback((tabId: TabId) => {
     setSelectedTab(tabId);
@@ -67,6 +102,73 @@ export function ToolProvider({ children }: { children: ReactNode }) {
     return TOOLS[selectedTab] || [];
   }, [selectedTab]);
 
+  const startMockServer = useCallback(async (port: number = 3001, endpoints?: MockEndpoint[]): Promise<boolean> => {
+    try {
+      // Use ref to get latest endpoints, avoiding stale closure issues
+      const endpointsToUse = endpoints ?? endpointsRef.current;
+      const response = await fetch('/api/mock-server/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ port, endpoints: endpointsToUse }),
+      });
+      
+      if (response.ok) {
+        setMockServer((prev) => ({
+          ...prev,
+          isRunning: true,
+          port,
+          startedAt: new Date(),
+          endpoints: endpointsToUse,
+        }));
+        setStatusState({
+          message: `Mock server started on port ${port}`,
+          type: 'success',
+          details: `${endpointsToUse.length} endpoint(s) registered`,
+        });
+        return true;
+      }
+      throw new Error('Failed to start server');
+    } catch (err) {
+      setStatusState({
+        message: 'Failed to start mock server',
+        type: 'error',
+        details: err instanceof Error ? err.message : 'Unknown error',
+      });
+      return false;
+    }
+  }, []);
+
+  const stopMockServer = useCallback(async () => {
+    try {
+      await fetch('/api/mock-server/stop', { method: 'POST' });
+    } catch {
+      // Continue even if the request fails
+    }
+    setMockServer((prev) => ({
+      ...prev,
+      isRunning: false,
+      startedAt: null,
+    }));
+    setStatusState({
+      message: 'Mock server stopped',
+      type: 'info',
+    });
+  }, []);
+
+  const updateMockEndpoints = useCallback((endpoints: MockEndpoint[]) => {
+    setMockServer((prev) => ({ ...prev, endpoints }));
+    // If server is running, sync endpoints with backend
+    if (mockServer.isRunning) {
+      fetch('/api/mock-server/endpoints', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoints }),
+      }).catch(() => {
+        // Ignore errors
+      });
+    }
+  }, [mockServer.isRunning]);
+
   const value: ToolContextValue = {
     selectedTab,
     selectedTool,
@@ -83,6 +185,10 @@ export function ToolProvider({ children }: { children: ReactNode }) {
     clearStatus,
     getTabInfo,
     getToolsForCurrentTab,
+    mockServer,
+    startMockServer,
+    stopMockServer,
+    updateMockEndpoints,
   };
 
   return <ToolContext.Provider value={value}>{children}</ToolContext.Provider>;

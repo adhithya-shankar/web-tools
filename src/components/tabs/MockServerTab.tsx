@@ -1,27 +1,175 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToolContext, useToolStatus } from '../../context/ToolContext';
 
 export function MockServerTab() {
   const { selectedTool } = useToolContext();
 
-  if (!selectedTool) {
-    return <TabPlaceholder />;
-  }
+  return (
+    <div className="flex h-full flex-col">
+      <ServerControls />
+      <div className="flex-1 overflow-auto">
+        {!selectedTool ? (
+          <TabPlaceholder />
+        ) : (
+          (() => {
+            switch (selectedTool.id) {
+              case 'endpoint-manager':
+                return <EndpointManager />;
+              case 'response-builder':
+                return <ResponseBuilder />;
+              case 'request-log':
+                return <RequestLog />;
+              case 'schema-validator':
+                return <SchemaValidator />;
+              case 'delay-simulator':
+                return <DelaySimulator />;
+              default:
+                return <TabPlaceholder />;
+            }
+          })()
+        )}
+      </div>
+    </div>
+  );
+}
 
-  switch (selectedTool.id) {
-    case 'endpoint-manager':
-      return <EndpointManager />;
-    case 'response-builder':
-      return <ResponseBuilder />;
-    case 'request-log':
-      return <RequestLog />;
-    case 'schema-validator':
-      return <SchemaValidator />;
-    case 'delay-simulator':
-      return <DelaySimulator />;
-    default:
-      return <TabPlaceholder />;
-  }
+function ServerControls() {
+  const { mockServer, startMockServer, stopMockServer } = useToolContext();
+  const [port, setPort] = useState(mockServer.port);
+  const [uptime, setUptime] = useState<string>('');
+  const [isStarting, setIsStarting] = useState(false);
+
+  // Update uptime every second when server is running
+  useEffect(() => {
+    if (!mockServer.isRunning || !mockServer.startedAt) {
+      setUptime('');
+      return;
+    }
+    
+    // Initial update
+    const updateUptime = () => {
+      const seconds = Math.floor((Date.now() - mockServer.startedAt!.getTime()) / 1000);
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      setUptime(`${mins}m ${secs}s`);
+    };
+    
+    updateUptime();
+    const interval = setInterval(updateUptime, 1000);
+
+    return () => clearInterval(interval);
+  }, [mockServer.isRunning, mockServer.startedAt]);
+
+  const handleStart = async () => {
+    setIsStarting(true);
+    // Pass the current endpoints explicitly to avoid stale closure issues
+    await startMockServer(port, mockServer.endpoints);
+    setIsStarting(false);
+  };
+
+  const handleStop = async () => {
+    await stopMockServer();
+  };
+
+  return (
+    <div className="mb-4 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div
+              className={`h-3 w-3 rounded-full ${
+                mockServer.isRunning
+                  ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50 animate-pulse'
+                  : 'bg-slate-600'
+              }`}
+            />
+            <span className="font-medium text-slate-200">
+              Mock Server
+            </span>
+            <span className={`text-sm ${mockServer.isRunning ? 'text-emerald-400' : 'text-slate-500'}`}>
+              {mockServer.isRunning ? 'Running' : 'Stopped'}
+            </span>
+          </div>
+          
+          {mockServer.isRunning && uptime && (
+            <span className="text-xs text-slate-500">
+              Uptime: {uptime}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-slate-400">Port:</label>
+            <input
+              type="number"
+              value={port}
+              onChange={(e) => setPort(parseInt(e.target.value) || 3001)}
+              disabled={mockServer.isRunning}
+              min={1024}
+              max={65535}
+              className="w-20 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-200 disabled:opacity-50"
+            />
+          </div>
+          
+          {mockServer.isRunning ? (
+            <button
+              onClick={handleStop}
+              className="flex items-center gap-2 rounded-lg bg-rose-500/20 px-4 py-2 text-sm font-medium text-rose-400 transition-colors hover:bg-rose-500/30"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+              </svg>
+              Stop Server
+            </button>
+          ) : (
+            <button
+              onClick={handleStart}
+              disabled={isStarting}
+              className="flex items-center gap-2 rounded-lg bg-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-400 transition-colors hover:bg-emerald-500/30 disabled:opacity-50"
+            >
+              {isStarting ? (
+                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              ) : (
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              {isStarting ? 'Starting...' : 'Start Server'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {mockServer.isRunning && (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-400">Base URL:</span>
+            <code className="rounded bg-slate-900 px-2 py-0.5 font-mono text-sky-400">
+              http://localhost:{mockServer.port}
+            </code>
+            <button
+              onClick={() => navigator.clipboard.writeText(`http://localhost:${mockServer.port}`)}
+              className="rounded p-1 text-slate-500 hover:bg-slate-700 hover:text-slate-300"
+              title="Copy URL"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </button>
+          </div>
+          <div className="text-xs text-slate-500">
+            {mockServer.endpoints.length} endpoint(s) registered • Example: <code className="text-slate-400">GET http://localhost:{mockServer.port}/api/users</code>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function TabPlaceholder() {
@@ -45,25 +193,14 @@ function TabPlaceholder() {
   );
 }
 
-interface Endpoint {
-  id: string;
-  method: string;
-  path: string;
-  response: string;
-  status: number;
-  delay: number;
-}
-
 function EndpointManager() {
-  const [endpoints, setEndpoints] = useState<Endpoint[]>([
-    { id: '1', method: 'GET', path: '/api/users', response: '{"users": []}', status: 200, delay: 0 },
-    { id: '2', method: 'POST', path: '/api/users', response: '{"id": 1, "created": true}', status: 201, delay: 100 },
-  ]);
-  const [editing, setEditing] = useState<Endpoint | null>(null);
+  const { mockServer, updateMockEndpoints } = useToolContext();
+  const endpoints = mockServer.endpoints;
+  const [editing, setEditing] = useState<typeof endpoints[0] | null>(null);
   const { success, setStats } = useToolStatus();
 
   const addEndpoint = () => {
-    const newEndpoint: Endpoint = {
+    const newEndpoint = {
       id: Date.now().toString(),
       method: 'GET',
       path: '/api/new',
@@ -71,20 +208,20 @@ function EndpointManager() {
       status: 200,
       delay: 0,
     };
-    setEndpoints([...endpoints, newEndpoint]);
+    updateMockEndpoints([...endpoints, newEndpoint]);
     setEditing(newEndpoint);
     success('Endpoint added');
     setStats({ 'Total Endpoints': endpoints.length + 1 });
   };
 
   const deleteEndpoint = (id: string) => {
-    setEndpoints(endpoints.filter((e) => e.id !== id));
+    updateMockEndpoints(endpoints.filter((e) => e.id !== id));
     success('Endpoint deleted');
     setStats({ 'Total Endpoints': endpoints.length - 1 });
   };
 
-  const saveEndpoint = (endpoint: Endpoint) => {
-    setEndpoints(endpoints.map((e) => (e.id === endpoint.id ? endpoint : e)));
+  const saveEndpoint = (updatedEndpoint: typeof endpoints[0]) => {
+    updateMockEndpoints(endpoints.map((e) => (e.id === updatedEndpoint.id ? updatedEndpoint : e)));
     setEditing(null);
     success('Endpoint saved');
   };
@@ -106,9 +243,9 @@ function EndpointManager() {
           <div key={endpoint.id} className="card">
             {editing?.id === endpoint.id ? (
               <div className="space-y-3">
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <select
-                    value={endpoint.method}
+                    value={editing.method}
                     onChange={(e) => setEditing({ ...editing, method: e.target.value })}
                     className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm"
                   >
@@ -121,12 +258,12 @@ function EndpointManager() {
                     value={editing.path}
                     onChange={(e) => setEditing({ ...editing, path: e.target.value })}
                     placeholder="/api/path"
-                    className="input flex-1"
+                    className="input flex-1 min-w-[200px]"
                   />
                   <input
                     type="number"
                     value={editing.status}
-                    onChange={(e) => setEditing({ ...editing, status: parseInt(e.target.value) })}
+                    onChange={(e) => setEditing({ ...editing, status: parseInt(e.target.value) || 200 })}
                     className="input w-20"
                     placeholder="Status"
                   />
@@ -137,6 +274,52 @@ function EndpointManager() {
                   placeholder="Response body (JSON)"
                   className="input h-24 resize-none font-mono text-sm"
                 />
+                {/* Delay Simulator for this endpoint */}
+                <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
+                  <div className="mb-2 flex items-center gap-2">
+                    <svg className="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-sm font-medium text-slate-300">Response Delay</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={5000}
+                      step={100}
+                      value={editing.delay}
+                      onChange={(e) => setEditing({ ...editing, delay: parseInt(e.target.value) })}
+                      className="flex-1"
+                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={editing.delay}
+                        onChange={(e) => setEditing({ ...editing, delay: Math.max(0, parseInt(e.target.value) || 0) })}
+                        className="w-20 rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-right text-sm text-slate-200"
+                        min={0}
+                        max={10000}
+                      />
+                      <span className="text-sm text-slate-500">ms</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    {[0, 100, 500, 1000, 2000, 5000].map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setEditing({ ...editing, delay: d })}
+                        className={`rounded px-2 py-1 text-xs transition-colors ${
+                          editing.delay === d
+                            ? 'bg-amber-500/20 text-amber-400'
+                            : 'bg-slate-800 text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        {d === 0 ? 'None' : `${d}ms`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <button onClick={() => saveEndpoint(editing)} className="btn-primary text-sm">
                     Save
@@ -160,6 +343,14 @@ function EndpointManager() {
                   </span>
                   <span className="font-mono text-slate-200">{endpoint.path}</span>
                   <span className="text-xs text-slate-500">→ {endpoint.status}</span>
+                  {endpoint.delay > 0 && (
+                    <span className="flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400">
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {endpoint.delay}ms
+                    </span>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <button
