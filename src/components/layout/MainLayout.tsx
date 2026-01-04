@@ -17,15 +17,6 @@ export function MainLayout({ children }: MainLayoutProps) {
         <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-accent-500/10 blur-3xl" />
       </div>
 
-      {/* Grid pattern */}
-      <div
-        className="pointer-events-none fixed inset-0 opacity-[0.015]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
-          backgroundSize: '48px 48px',
-        }}
-      />
 
       {/* Header */}
       <Header />

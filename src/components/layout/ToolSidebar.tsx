@@ -45,7 +45,7 @@ function ToolButton({ tool, isActive, onClick }: ToolButtonProps) {
         group w-full rounded-lg px-3 py-2.5 text-left transition-all duration-150
         ${
           isActive
-            ? 'bg-gradient-to-r from-primary-500/20 to-primary-500/10 text-white ring-1 ring-primary-500/30'
+            ? 'bg-primary-500/15 text-white ring-1 ring-primary-500/30'
             : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
         }
       `}

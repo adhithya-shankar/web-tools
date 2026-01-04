@@ -41,7 +41,7 @@ function TabButton({ label, icon, isActive, onClick }: TabButtonProps) {
         transition-all duration-200 ease-out
         ${
           isActive
-            ? 'bg-gradient-to-r from-primary-500/20 to-accent-500/20 text-white shadow-lg shadow-primary-500/10'
+            ? 'bg-primary-500/20 text-white shadow-lg shadow-primary-500/10'
             : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
         }
       `}
@@ -49,7 +49,7 @@ function TabButton({ label, icon, isActive, onClick }: TabButtonProps) {
       <TabIcon iconName={icon} isActive={isActive} />
       <span>{label}</span>
       {isActive && (
-        <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary-400 to-accent-400" />
+        <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary-400" />
       )}
     </button>
   );

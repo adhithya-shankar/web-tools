@@ -179,7 +179,7 @@ function TabPlaceholder() {
 
   return (
     <div className="flex h-full flex-col items-center justify-center text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 text-primary-400">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-500/20 text-primary-400">
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
         </svg>
@@ -693,7 +693,7 @@ function DelaySimulator() {
           <div className="mb-4 text-sm text-slate-400">Progress</div>
           <div className="h-4 overflow-hidden rounded-full bg-slate-800">
             <div
-              className="h-full bg-gradient-to-r from-primary-500 to-accent-500 transition-all duration-100"
+              className="h-full bg-primary-500 transition-all duration-100"
               style={{ width: `${(elapsed / delay) * 100}%` }}
             />
           </div>
