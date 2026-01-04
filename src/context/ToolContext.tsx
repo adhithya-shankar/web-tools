@@ -17,6 +17,8 @@ interface MockServerState {
   endpoints: MockEndpoint[];
 }
 
+type Theme = 'dark' | 'light';
+
 interface ToolContextValue extends ToolState {
   setSelectedTab: (tabId: TabId) => void;
   setSelectedTool: (tool: Tool | null) => void;
@@ -31,6 +33,8 @@ interface ToolContextValue extends ToolState {
   startMockServer: (port?: number, endpoints?: MockEndpoint[]) => Promise<boolean>;
   stopMockServer: () => Promise<void>;
   updateMockEndpoints: (endpoints: MockEndpoint[]) => void;
+  theme: Theme;
+  toggleTheme: () => void;
 }
 
 const defaultStatus: StatusInfo = {
@@ -47,6 +51,14 @@ export function ToolProvider({ children }: { children: ReactNode }) {
   const [isProcessing, setProcessing] = useState(false);
   const [lastAction, setLastAction] = useState<string>();
   const [stats, setStats] = useState<Record<string, string | number>>({});
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme') as Theme;
+      if (saved) return saved;
+      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    return 'dark';
+  });
   const [mockServer, setMockServer] = useState<MockServerState>({
     isRunning: false,
     port: 3001,
@@ -101,6 +113,26 @@ export function ToolProvider({ children }: { children: ReactNode }) {
   const getToolsForCurrentTab = useCallback(() => {
     return TOOLS[selectedTab] || [];
   }, [selectedTab]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', next);
+      return next;
+    });
+  }, []);
+
+  // Apply theme to document
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
+  }, [theme]);
 
   const startMockServer = useCallback(async (port: number = 3001, endpoints?: MockEndpoint[]): Promise<boolean> => {
     try {
@@ -189,6 +221,8 @@ export function ToolProvider({ children }: { children: ReactNode }) {
     startMockServer,
     stopMockServer,
     updateMockEndpoints,
+    theme,
+    toggleTheme,
   };
 
   return <ToolContext.Provider value={value}>{children}</ToolContext.Provider>;
