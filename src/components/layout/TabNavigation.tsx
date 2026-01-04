@@ -6,7 +6,7 @@ export function TabNavigation() {
 
   return (
     <nav className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/80 backdrop-blur-lg">
-      <div className="mx-auto max-w-7xl px-4">
+      <div className="w-full px-4">
         <div className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-hide">
           {TABS.map((tab) => (
             <TabButton

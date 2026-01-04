@@ -31,46 +31,13 @@ const statusIcons = {
 };
 
 export function StatusBar() {
-  const { status, isProcessing, selectedTool, getTabInfo, stats } = useToolContext();
+  const { isProcessing, selectedTool, getTabInfo, stats } = useToolContext();
   const tabInfo = getTabInfo();
 
   return (
     <div className="sticky bottom-0 z-50 border-t border-slate-800 bg-slate-900/95 backdrop-blur-md">
       <div className="flex items-center justify-between px-4 py-2">
-        {/* Left: Status message */}
-        <div className="flex items-center gap-3">
-          {isProcessing ? (
-            <div className="flex items-center gap-2 text-primary-400">
-              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              <span className="text-sm font-medium">Processing...</span>
-            </div>
-          ) : (
-            <div className={`flex items-center gap-2 rounded-md border px-2.5 py-1 ${statusColors[status.type]}`}>
-              {statusIcons[status.type]}
-              <span className="text-sm font-medium">{status.message}</span>
-              {status.details && (
-                <span className="hidden text-sm opacity-70 sm:inline">— {status.details}</span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Center: Stats */}
-        {stats && Object.keys(stats).length > 0 && (
-          <div className="hidden items-center gap-4 md:flex">
-            {Object.entries(stats ?? {}).map(([key, value]) => (
-              <div key={key} className="flex items-center gap-1.5 text-sm">
-                <span className="text-slate-500">{key}:</span>
-                <span className="font-mono text-slate-300">{value}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Right: Current context */}
+        {/* Left: Current context */}
         <div className="flex items-center gap-3 text-sm">
           <div className="flex items-center gap-1.5 text-slate-400">
             <TabIcon iconName={tabInfo.icon} />
@@ -82,7 +49,28 @@ export function StatusBar() {
               <span className="font-medium text-slate-300">{selectedTool.name}</span>
             </>
           )}
+          {isProcessing && (
+            <div className="flex items-center gap-2 text-primary-400 ml-4">
+              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm font-medium">Processing...</span>
+            </div>
+          )}
         </div>
+
+        {/* Right: Stats */}
+        {stats && Object.keys(stats).length > 0 && (
+          <div className="hidden items-center gap-4 md:flex">
+            {Object.entries(stats ?? {}).map(([key, value]) => (
+              <div key={key} className="flex items-center gap-1.5 text-sm">
+                <span className="text-slate-500">{key}:</span>
+                <span className="font-mono text-slate-300">{value}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

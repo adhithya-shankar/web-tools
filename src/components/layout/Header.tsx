@@ -5,7 +5,7 @@ export function Header() {
 
   return (
     <header className="border-b border-slate-800 bg-slate-950 dark:border-slate-800 dark:bg-slate-950 light:border-slate-200 light:bg-white">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+      <div className="flex w-full items-center justify-between px-4 py-3">
         {/* Logo */}
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 shadow-lg shadow-primary-500/25">
@@ -19,7 +19,12 @@ export function Header() {
               strokeLinejoin="round"
               className="h-5 w-5 text-white"
             >
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              {/* Left bracket < */}
+              <path d="M8 6L3 12L8 18" />
+              {/* Right bracket > */}
+              <path d="M16 6L21 12L16 18" />
+              {/* Lightning bolt in center */}
+              <path d="M13 6L10 12H14L11 18" fill="currentColor" strokeWidth="1.5" />
             </svg>
           </div>
           <div>
