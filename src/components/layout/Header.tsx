@@ -4,11 +4,11 @@ export function Header() {
   const { theme, toggleTheme } = useToolContext();
 
   return (
-    <header className="border-b border-slate-800 bg-slate-950 dark:border-slate-800 dark:bg-slate-950 light:border-slate-200 light:bg-white">
+    <header className="border-b border-slate-800 bg-slate-950">
       <div className="flex w-full items-center justify-between px-4 py-3">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 shadow-lg shadow-primary-500/25">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#bd93f9]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -17,7 +17,7 @@ export function Header() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="h-5 w-5 text-white"
+              className="h-5 w-5 text-[#282a36]"
             >
               {/* Left bracket < */}
               <path d="M8 6L3 12L8 18" />
@@ -31,7 +31,7 @@ export function Header() {
             <h1 className="font-display text-xl font-bold tracking-tight">
               <span className="text-gradient">WebTools</span>
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-500 light:text-slate-400">Developer Utilities</p>
+            <p className="text-xs text-slate-500">Developer Utilities</p>
           </div>
         </div>
 
@@ -40,7 +40,7 @@ export function Header() {
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
-            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200 dark:text-slate-400 dark:hover:bg-slate-800 light:text-slate-600 light:hover:bg-slate-100"
+            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? (
@@ -85,4 +85,3 @@ export function Header() {
     </header>
   );
 }
-

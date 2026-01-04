@@ -5,42 +5,57 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Outfit', 'system-ui', 'sans-serif'],
-        display: ['Syne', 'sans-serif'],
+        sans: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        display: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       colors: {
-        primary: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
-          950: '#052e16',
+        // Dracula palette
+        dracula: {
+          bg: '#282a36',
+          current: '#44475a',
+          fg: '#f8f8f2',
+          comment: '#6272a4',
+          cyan: '#8be9fd',
+          green: '#50fa7b',
+          orange: '#ffb86c',
+          pink: '#ff79c6',
+          purple: '#bd93f9',
+          red: '#ff5555',
+          yellow: '#f1fa8c',
         },
+        // Map primary to dracula purple
+        primary: {
+          50: '#f5f3ff',
+          100: '#ede9fe',
+          200: '#ddd6fe',
+          300: '#c4b5fd',
+          400: '#bd93f9',
+          500: '#bd93f9',
+          600: '#a78bfa',
+          700: '#8b5cf6',
+          800: '#7c3aed',
+          900: '#6d28d9',
+          950: '#4c1d95',
+        },
+        // Map accent to dracula pink
         accent: {
-          50: '#fdf4ff',
-          100: '#fae8ff',
-          200: '#f5d0fe',
-          300: '#f0abfc',
-          400: '#e879f9',
-          500: '#d946ef',
-          600: '#c026d3',
-          700: '#a21caf',
-          800: '#86198f',
-          900: '#701a75',
-          950: '#4a044e',
+          50: '#fdf2f8',
+          100: '#fce7f3',
+          200: '#fbcfe8',
+          300: '#f9a8d4',
+          400: '#ff79c6',
+          500: '#ff79c6',
+          600: '#db2777',
+          700: '#be185d',
+          800: '#9d174d',
+          900: '#831843',
+          950: '#500724',
         },
       },
       animation: {
-        'fade-in': 'fade-in 0.5s ease-out',
-        'slide-up': 'slide-up 0.5s ease-out',
+        'fade-in': 'fade-in 0.3s ease-out',
+        'slide-up': 'slide-up 0.3s ease-out',
         'slide-down': 'slide-down 0.3s ease-out',
-        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         'fade-in': {
@@ -60,4 +75,3 @@ export default {
   },
   plugins: [],
 };
-
