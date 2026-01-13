@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import App from './App';
 
 describe('App', () => {
@@ -8,32 +8,30 @@ describe('App', () => {
     expect(screen.getByText('WebTools')).toBeInTheDocument();
   });
 
-  it('renders the counter with initial value of 0', () => {
+  it('renders the subtitle', () => {
     render(<App />);
-    expect(screen.getByText('0')).toBeInTheDocument();
+    expect(screen.getByText('Developer Utilities')).toBeInTheDocument();
   });
 
-  it('increments the counter when increase button is clicked', () => {
+  it('renders the tab navigation with Formatter tab', () => {
     render(<App />);
-    const increaseButton = screen.getByRole('button', { name: /increment/i });
-    fireEvent.click(increaseButton);
-    expect(screen.getByText('1')).toBeInTheDocument();
+    const nav = screen.getByRole('navigation');
+    const formatterTab = within(nav).getByRole('button', { name: /formatter/i });
+    expect(formatterTab).toBeInTheDocument();
   });
 
-  it('decrements the counter when decrease button is clicked', () => {
+  it('renders multiple tool tabs in navigation', () => {
     render(<App />);
-    const decreaseButton = screen.getByRole('button', { name: /decrement/i });
-    fireEvent.click(decreaseButton);
-    expect(screen.getByText('-1')).toBeInTheDocument();
+    const nav = screen.getByRole('navigation');
+    expect(within(nav).getByRole('button', { name: /formatter/i })).toBeInTheDocument();
+    expect(within(nav).getByRole('button', { name: /converter/i })).toBeInTheDocument();
+    expect(within(nav).getByRole('button', { name: /generator/i })).toBeInTheDocument();
+    expect(within(nav).getByRole('button', { name: /^text$/i })).toBeInTheDocument();
   });
 
-  it('renders technology badges', () => {
+  it('has a theme toggle button', () => {
     render(<App />);
-    expect(screen.getByText('React 18')).toBeInTheDocument();
-    expect(screen.getByText('TypeScript')).toBeInTheDocument();
-    expect(screen.getByText('Vite')).toBeInTheDocument();
-    expect(screen.getByText('Tailwind CSS')).toBeInTheDocument();
-    expect(screen.getByText('Vitest')).toBeInTheDocument();
+    // In dark mode (default), the button title says "Switch to light mode"
+    expect(screen.getByTitle(/switch to light mode/i)).toBeInTheDocument();
   });
 });
-
