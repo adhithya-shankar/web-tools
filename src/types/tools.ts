@@ -42,8 +42,11 @@ export interface ToolState {
   stats?: Record<string, string | number>;
 }
 
+// Check if MockServer feature is enabled via environment variable
+const isMockServerEnabled = import.meta.env.VITE_ENABLE_MOCK_SERVER === 'true';
+
 // Tab configuration
-export const TABS: Tab[] = [
+const ALL_TABS: Tab[] = [
   {
     id: 'formatter',
     label: 'Formatter',
@@ -93,6 +96,11 @@ export const TABS: Tab[] = [
     description: 'Create and manage mock API endpoints',
   },
 ];
+
+// Export filtered TABS based on feature flags
+export const TABS: Tab[] = isMockServerEnabled
+  ? ALL_TABS
+  : ALL_TABS.filter((tab) => tab.id !== 'mock-server');
 
 // Tools organized by tab
 export const TOOLS: Record<TabId, Tool[]> = {
